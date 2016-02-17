@@ -2,10 +2,21 @@ from os import listdir
 from os.path import isfile, join
 import pickle, csv
 
+import numpy as np
+from scipy.misc import imread
+
+
 PATH_TO_PLACE_TASK_DATA = '../../mediaeval_placing_task_2015_data/'
+
+# FOR SMALL DATASET
+PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small/'
 PATH_TO_PLACE_TASK_DATA_TRAIN = '../data/train'
 PATH_TO_PLACE_TASK_DATA_TEST = '../data/test'
 PATH_TO_PLACE_TASK_DATA_VAL = '../data/validation'
+
+IMG_HEIGHT = 500
+IMG_WIDTH = 300
+NUM_CHANNELS = 3
 
 TRUTH_LABELS_FILENAME = 'mediaeval2015_placing_locale_train'
 
@@ -14,6 +25,8 @@ def get_image_filenames(path):
   '''
   Returns a list of filenames in the folder of the specified path
   '''
+
+  # NOTE: Make sure to delete any hidden files in this folder (such as .DS_STORE) that may get added to the image_filenames list
   image_filenames = [f.split(".")[0] for f in listdir(path) if isfile(join(path, f))]  # remove the ".png" part of filename
   # print 'image_filenames = {}'.format(image_filenames)
   return image_filenames
@@ -91,6 +104,77 @@ def map_image_id_to_node(pickle_file, image_node_map, image_filenames_list, trut
     pass
 
 
+
+def load_images_data(image_filenames_list, np_save_filename):
+  '''
+  Loads all images from list of filenames and saves them to a numpy file.
+  Returns list of image filenames that passed the spec test (correct width, height, channel size)
+  '''
+  print 'Loading folder with {} images.'.format(len(image_filenames_list))
+  all_image_data = np.empty((len(image_filenames_list), IMG_WIDTH, IMG_HEIGHT, NUM_CHANNELS))
+  final_image_filenames_list = [] # list of all image filenames added to X input data
+  img_count = 0
+  for img_index, image_filename in enumerate(image_filenames_list):
+    if img_index % 100 == 0:
+      print 'Processed {} *100 images.'.format(img_index/100)
+    # if img_count == 10:
+    #   break
+    filename = PATH_TO_PLACE_TASK_DATA_ALL + image_filename + '.png'
+    with open(filename, 'rb') as img_file:
+      image_array = imread(img_file)  # (W, H, C)
+      # print filename
+      # print image_array.shape
+      if image_array.shape != (IMG_WIDTH, IMG_HEIGHT, NUM_CHANNELS):   # skip if image does not have 3 channels
+        continue
+      all_image_data[img_count] = image_array
+      final_image_filenames_list.append(image_filename)
+      img_count += 1
+
+      # if all_image_data is not None:
+      #   image_array = np.expand_dims(image_array, axis=0)  # (1, H, W, C)
+      #   all_image_data = np.vstack((all_image_data, image_array))  
+      # else:
+      #   all_image_data = image_array
+      #   print 'created image_data_matrix with shape: {}'.format(all_image_data.shape)
+
+  print 'Num images loaded that passed spec: {}'.format(img_count)
+  all_image_data = all_image_data[:img_count]
+  print 'Final image data shape: {}'.format(all_image_data.shape)
+
+  # Save data
+  # print 'INFO: Saving X as np file'
+  # np.save(np_save_filename, all_image_data)
+
+  # arr = np.load(np_save_filename)
+  # print 'INFO: Loading np file'
+  # print 'Loaded array with shape {}'.format(arr.shape)
+
+  return final_image_filenames_list
+
+def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filename):
+  '''
+  Extract Y in correct order (based on image_filenames_list).
+  Save Y as numpy file
+  '''
+  with open(pickled_all_info_file, 'r') as f:
+    image_info_map = pickle.load(f)
+    Y = np.empty((len(image_filenames_list)), dtype=str)
+    for index, img_name in enumerate(image_filenames_list):
+      country_name = image_info_map[img_name][2].split('@')[0]  # take country name from node name in index 4
+      # if index <= 10:
+      #   print country_name
+      Y[index] = country_name
+
+    # Save data
+    print 'INFO: Saving Y vector as np file'
+    np.save(np_save_filename, Y)
+
+    arr = np.load(np_save_filename)
+    print 'INFO: Loading np file'
+    print 'Loaded array with shape {}'.format(arr.shape)
+
+
+
 if __name__ == "__main__":
 
   # test pickle file
@@ -102,12 +186,19 @@ if __name__ == "__main__":
   #   print 'pickled value = {}'.format(test_map[obj_id])
 
   # path = PATH_TO_PLACE_TASK_DATA + '000/'
-  image_filenames_train = get_image_filenames(PATH_TO_PLACE_TASK_DATA_TRAIN)
-  image_filenames_test = get_image_filenames(PATH_TO_PLACE_TASK_DATA_TEST)
-  image_filenames_val = get_image_filenames(PATH_TO_PLACE_TASK_DATA_VAL)
-  image_filenames = image_filenames_train + image_filenames_test + image_filenames_val
+  # image_filenames_train = get_image_filenames(PATH_TO_PLACE_TASK_DATA_TRAIN)
+  # image_filenames_test = get_image_filenames(PATH_TO_PLACE_TASK_DATA_TEST)
+  # image_filenames_val = get_image_filenames(PATH_TO_PLACE_TASK_DATA_VAL)
+  # image_filenames = image_filenames_train + image_filenames_test + image_filenames_val
 
-  # truth_labels_train = open_labels_data(pickle_filename = '../data_maps/image_id_to_node_info_train_labels.pickle')
-  truth_labels_000 = open_labels_data(image_filenames, pickle_filename = '../data_maps/image_id_to_node_info_000_labels.pickle')
+  # 0) Load labels data from mediaeval train file and saves to pickle file
+  # open_labels_data(image_filenames, pickle_filename = '../data_maps/image_id_to_node_info_000_small_labels.pickle')
+
+  image_filenames_small = get_image_filenames(PATH_TO_PLACE_TASK_DATA_ALL)
+  # 1) Get input data X
+  # print image_filenames_small[:10]
+  final_image_filenames_small = load_images_data(image_filenames_small, '../data_maps/x_input_000_small.npy') # Pass in npy file name to save to
+  # 2) Get truth labels Y
+  get_truth_labels(final_image_filenames_small, '../data_maps/image_id_to_node_info_000_small.pickle', '../data_maps/y_country_name_000_small.npy')  # Pass in pickle file to load image data from and np save filename
 
   # truth_labels_for_image_filenames = map_image_id_to_node(image_node_map, image_filenames, truth_labels_all)
