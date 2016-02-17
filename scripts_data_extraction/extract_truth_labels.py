@@ -1,3 +1,8 @@
+'''
+This file pre-processes the data images and labels.
+'''
+
+
 from os import listdir
 from os.path import isfile, join
 import pickle, csv
@@ -5,18 +10,31 @@ import pickle, csv
 import numpy as np
 from scipy.misc import imread
 
+# Naming files
+X_INPUT_NPY_FILENAME = 'x_input.npy'
+Y_OUTPUT_NPY_FILENAME = 'y_labels.npy'
+MAP_LABELS_FILENAME = 'country_name_class_index_map.pickle'
+ALL_TRUTH_LABELS_FILENAME_000_SMALL = 'image_id_to_node_info_000_small.pickle'
 
-PATH_TO_PLACE_TASK_DATA = '../../mediaeval_placing_task_2015_data/'
 
-# FOR SMALL DATASET
-PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small/'
-PATH_TO_PLACE_TASK_DATA_TRAIN = '../data/train'
-PATH_TO_PLACE_TASK_DATA_TEST = '../data/test'
-PATH_TO_PLACE_TASK_DATA_VAL = '../data/validation'
+# FOR 000 SMALL DATASET
+# PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small/'
+# SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small/'
 
-IMG_HEIGHT = 500
-IMG_WIDTH = 300
+# IMG_HEIGHT = 500
+# IMG_WIDTH = 300
+# NUM_CHANNELS = 3
+
+# FOR 000 SMALL DATASET, 50x30
+PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small_50by30/'
+SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small_50by30/'
+
+IMG_HEIGHT = 50
+IMG_WIDTH = 30
 NUM_CHANNELS = 3
+
+# Full Data Set
+PATH_TO_PLACE_TASK_DATA = '../../mediaeval_placing_task_2015_data/'
 
 TRUTH_LABELS_FILENAME = 'mediaeval2015_placing_locale_train'
 
@@ -88,23 +106,6 @@ def open_labels_data(image_filename_list = [], pickle_filename = None):
   return image_info_map
 
 
-def map_image_id_to_node(pickle_file, image_node_map, image_filenames_list, truth_labels_all):
-  '''
-  Loads the pickle file and updates the given map with the following key, value pairs.
-    Key: names of images from the given list
-    Value: associated node location names taken from the truth labels
-    {image ID: (node_id, node_name)}
-  '''
-  truth_labels_for_image_filenames = {}
-
-  for image_id in image_filenames_list:
-    # node_id = 
-    # node_name = 
-    # image_node_map[image_id] = (node_id, node_name)
-    pass
-
-
-
 def load_images_data(image_filenames_list, np_save_filename):
   '''
   Loads all images from list of filenames and saves them to a numpy file.
@@ -144,13 +145,13 @@ def load_images_data(image_filenames_list, np_save_filename):
   print 'Final image data shape: {}'.format(all_image_data.shape)
 
   # Save data
-  # print 'INFO: Saving X as np file'
-  # print np_save_filename
-  # np.save(np_save_filename, all_image_data)
+  print 'INFO: Saving X as np file'
+  print np_save_filename
+  np.save(np_save_filename, all_image_data)
 
-  # arr = np.load(np_save_filename)
-  # print 'INFO: Loading np file'
-  # print 'Loaded array with shape {}'.format(arr.shape)
+  arr = np.load(np_save_filename)
+  print 'INFO: Loading np file'
+  print 'Loaded array with shape {}'.format(arr.shape)
 
   return final_image_filenames_list
 
@@ -183,7 +184,6 @@ def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filena
     with open(pickle_class_map_filename, 'w') as f:
       pickle.dump(country_name_class_index_map, f)
 
-
     arr = np.load(np_save_filename)
     print 'INFO: Loading np file'
     print 'Loaded array with shape {}'.format(arr.shape)
@@ -192,28 +192,12 @@ def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filena
 
 if __name__ == "__main__":
 
-  # test pickle file
-  # obj_id = '001188ddf4be8e85477ca09d6b742f'
-  # print 'obj_id = {}'.format(obj_id)
-  # # print 'original value = {}'.format(image_info_map[obj_id])
-  # with open('../data_maps/image_id_to_node_info_000_labels.pickle', 'r') as f:
-  #   test_map = pickle.load(f)
-  #   print 'pickled value = {}'.format(test_map[obj_id])
-
-  # path = PATH_TO_PLACE_TASK_DATA + '000/'
-  # image_filenames_train = get_image_filenames(PATH_TO_PLACE_TASK_DATA_TRAIN)
-  # image_filenames_test = get_image_filenames(PATH_TO_PLACE_TASK_DATA_TEST)
-  # image_filenames_val = get_image_filenames(PATH_TO_PLACE_TASK_DATA_VAL)
-  # image_filenames = image_filenames_train + image_filenames_test + image_filenames_val
-
-  # 0) Load labels data from mediaeval train file and saves to pickle file
+  # 0) Load labels data from mediaeval train file and saves to pickle file --> Done once and used for processing truth labels for all images in same dataset
   # open_labels_data(image_filenames, pickle_filename = '../data_maps/image_id_to_node_info_000_small_labels.pickle')
 
-  image_filenames_small = get_image_filenames(PATH_TO_PLACE_TASK_DATA_ALL)
   # 1) Get input data X
+  image_filenames_small = get_image_filenames(PATH_TO_PLACE_TASK_DATA_ALL)
   # print image_filenames_small[:10]
-  final_image_filenames_small = load_images_data(image_filenames_small, '../data_maps/x_input_000_small.npy') # Pass in npy file name to save to
+  final_image_filenames_small = load_images_data(image_filenames_small, SAVE_TO_DATA_MAPS_FOLDER + X_INPUT_NPY_FILENAME) # Pass in npy file name to save to
   # 2) Get truth labels Y
-  get_truth_labels(final_image_filenames_small, '../data_maps/image_id_to_node_info_000_small.pickle', '../data_maps/y_country_name_000_small.npy', '../data_maps/country_name_class_index_map_000_small.pickle')  # Pass in pickle file to load image data from and np save filename
-
-  # truth_labels_for_image_filenames = map_image_id_to_node(image_node_map, image_filenames, truth_labels_all)
+  get_truth_labels(final_image_filenames_small, SAVE_TO_DATA_MAPS_FOLDER + ALL_TRUTH_LABELS_FILENAME_000_SMALL, SAVE_TO_DATA_MAPS_FOLDER + Y_OUTPUT_NPY_FILENAME, SAVE_TO_DATA_MAPS_FOLDER + MAP_LABELS_FILENAME)  # Pass in pickle file to load image data from and np save filename
