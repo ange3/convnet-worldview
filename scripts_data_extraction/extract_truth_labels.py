@@ -142,8 +142,9 @@ def load_images_data(image_filenames_list, np_save_filename):
   print 'Final image data shape: {}'.format(all_image_data.shape)
 
   # Save data
-  # print 'INFO: Saving X as np file'
-  # np.save(np_save_filename, all_image_data)
+  print 'INFO: Saving X as np file'
+  print np_save_filename
+  np.save(np_save_filename, all_image_data)
 
   # arr = np.load(np_save_filename)
   # print 'INFO: Loading np file'
@@ -167,6 +168,7 @@ def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filena
 
     # Save data
     print 'INFO: Saving Y vector as np file'
+    print np_save_filename
     np.save(np_save_filename, Y)
 
     arr = np.load(np_save_filename)
@@ -199,6 +201,6 @@ if __name__ == "__main__":
   # print image_filenames_small[:10]
   final_image_filenames_small = load_images_data(image_filenames_small, '../data_maps/x_input_000_small.npy') # Pass in npy file name to save to
   # 2) Get truth labels Y
-  get_truth_labels(final_image_filenames_small, '../data_maps/image_id_to_node_info_000_small.pickle', '../data_maps/y_country_name_000_small.npy')  # Pass in pickle file to load image data from and np save filename
+  # get_truth_labels(final_image_filenames_small, '../data_maps/image_id_to_node_info_000_small.pickle', '../data_maps/y_country_name_000_small.npy')  # Pass in pickle file to load image data from and np save filename
 
   # truth_labels_for_image_filenames = map_image_id_to_node(image_node_map, image_filenames, truth_labels_all)
