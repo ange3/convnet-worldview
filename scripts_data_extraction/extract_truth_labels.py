@@ -119,6 +119,8 @@ def load_images_data(image_filenames_list, np_save_filename):
       print 'Processed {} *100 images.'.format(img_index/100)
     # if img_count == 10:
     #   break
+    if image_filename == "":  # ignore error filenames
+      continue
     filename = PATH_TO_PLACE_TASK_DATA_ALL + image_filename + '.png'
     with open(filename, 'rb') as img_file:
       image_array = imread(img_file)  # (W, H, C)
@@ -142,9 +144,9 @@ def load_images_data(image_filenames_list, np_save_filename):
   print 'Final image data shape: {}'.format(all_image_data.shape)
 
   # Save data
-  print 'INFO: Saving X as np file'
-  print np_save_filename
-  np.save(np_save_filename, all_image_data)
+  # print 'INFO: Saving X as np file'
+  # print np_save_filename
+  # np.save(np_save_filename, all_image_data)
 
   # arr = np.load(np_save_filename)
   # print 'INFO: Loading np file'
@@ -152,24 +154,35 @@ def load_images_data(image_filenames_list, np_save_filename):
 
   return final_image_filenames_list
 
-def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filename):
+def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filename, pickle_class_map_filename):
   '''
   Extract Y in correct order (based on image_filenames_list).
   Save Y as numpy file
   '''
   with open(pickled_all_info_file, 'r') as f:
     image_info_map = pickle.load(f)
-    Y = np.empty((len(image_filenames_list)), dtype=str)
+    Y = np.empty((len(image_filenames_list)), dtype=int)
+    country_name_class_index_map = {}
     for index, img_name in enumerate(image_filenames_list):
       country_name = image_info_map[img_name][2].split('@')[0]  # take country name from node name in index 4
+      if country_name not in country_name_class_index_map:
+        country_name_class_index_map[country_name] = len(country_name_class_index_map)
+      class_index = country_name_class_index_map[country_name]
       # if index <= 10:
       #   print country_name
-      Y[index] = country_name
+      Y[index] = class_index
 
     # Save data
     print 'INFO: Saving Y vector as np file'
     print np_save_filename
     np.save(np_save_filename, Y)
+    print 'Y sample: ', Y[:10]
+
+    print 'INFO: Saving country name to class index map to pickle file'
+    print pickle_class_map_filename
+    with open(pickle_class_map_filename, 'w') as f:
+      pickle.dump(country_name_class_index_map, f)
+
 
     arr = np.load(np_save_filename)
     print 'INFO: Loading np file'
@@ -201,6 +214,6 @@ if __name__ == "__main__":
   # print image_filenames_small[:10]
   final_image_filenames_small = load_images_data(image_filenames_small, '../data_maps/x_input_000_small.npy') # Pass in npy file name to save to
   # 2) Get truth labels Y
-  # get_truth_labels(final_image_filenames_small, '../data_maps/image_id_to_node_info_000_small.pickle', '../data_maps/y_country_name_000_small.npy')  # Pass in pickle file to load image data from and np save filename
+  get_truth_labels(final_image_filenames_small, '../data_maps/image_id_to_node_info_000_small.pickle', '../data_maps/y_country_name_000_small.npy', '../data_maps/country_name_class_index_map_000_small.pickle')  # Pass in pickle file to load image data from and np save filename
 
   # truth_labels_for_image_filenames = map_image_id_to_node(image_node_map, image_filenames, truth_labels_all)
