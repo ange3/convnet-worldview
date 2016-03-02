@@ -26,11 +26,15 @@ ALL_TRUTH_LABELS_FILENAME_000_SMALL = 'image_id_to_node_info_000_small.pickle'
 # NUM_CHANNELS = 3
 
 # FOR 000 SMALL DATASET, 50x30
-PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small_50by30/'
-SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small_50by30/'
+# PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small_50by30/'
+# SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small_50by30/'
 
-IMG_HEIGHT = 50
-IMG_WIDTH = 30
+# FOR 000 SMALL DATASET, 48x32
+PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small_48by32/'
+SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small_48by32/'
+
+IMG_HEIGHT = 48
+IMG_WIDTH = 32
 NUM_CHANNELS = 3
 
 # Full Data Set
