@@ -166,7 +166,8 @@ def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filena
   '''
   with open(pickled_all_info_file, 'r') as f:
     image_info_map = pickle.load(f)
-    Y = np.empty((len(image_filenames_list)), dtype=int)
+    Y = np.empty((len(image_filenames_list)), dtype=np.int32)  # using type int32 because theano ivector for truth labels expects a vector of int32 values later on
+    # Y = np.empty((len(image_filenames_list)))
     country_name_class_index_map = {}
     for index, img_name in enumerate(image_filenames_list):
       country_name = image_info_map[img_name][2].split('@')[0]  # take country name from node name in index 4

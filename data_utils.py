@@ -15,6 +15,9 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
           excerpt = indices[start_idx:start_idx + batchsize]
       else:
           excerpt = slice(start_idx, start_idx + batchsize)
+      # print 'TARGETS'
+      # print excerpt
+      # print targets[excerpt]
       yield inputs[excerpt], targets[excerpt]
 
 
