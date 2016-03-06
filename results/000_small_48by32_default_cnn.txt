@@ -1,0 +1,46 @@
+Default CNN: 2 Conv Layers + FC layer + Softmax
+
+Starting training...
+Epoch 1 of 8 took 48.916s
+  training loss:    166075.343706
+  training accuracy:    9.91 %
+  validation loss:    1.603784
+  validation accuracy:    21.25 %
+Epoch 2 of 8 took 47.051s
+  training loss:    1.603589
+  training accuracy:    10.56 %
+  validation loss:    1.599228
+  validation accuracy:    21.88 %
+Epoch 3 of 8 took 45.567s
+  training loss:    1.602792
+  training accuracy:    10.59 %
+  validation loss:    1.597857
+  validation accuracy:    21.88 %
+Epoch 4 of 8 took 51.058s
+  training loss:    1.602692
+  training accuracy:    10.59 %
+  validation loss:    1.597371
+  validation accuracy:    21.88 %
+Epoch 5 of 8 took 43.413s
+  training loss:    1.602676
+  training accuracy:    10.59 %
+  validation loss:    1.597183
+  validation accuracy:    21.88 %
+Epoch 6 of 8 took 38.238s
+  training loss:    1.602673
+  training accuracy:    10.59 %
+  validation loss:    1.597110
+  validation accuracy:    21.88 %
+Epoch 7 of 8 took 51.374s
+  training loss:    1.602672
+  training accuracy:    10.59 %
+  validation loss:    1.597081
+  validation accuracy:    21.88 %
+Epoch 8 of 8 took 51.978s
+  training loss:    1.602671
+  training accuracy:    10.59 %
+  validation loss:    1.597069
+  validation accuracy:    21.88 %
+Final results:
+  test loss:      1.605821
+  test accuracy:    20.62 %
