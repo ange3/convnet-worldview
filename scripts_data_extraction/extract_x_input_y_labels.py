@@ -14,24 +14,25 @@ from scipy.misc import imread
 X_INPUT_NPY_FILENAME = 'x_input.npy'
 Y_OUTPUT_NPY_FILENAME = 'y_labels.npy'
 MAP_LABELS_FILENAME = 'country_name_class_index_map.pickle'
-ALL_TRUTH_LABELS_FILENAME_000_SMALL = 'image_id_to_node_info_000_small.pickle'
 
 
 # FOR 000 SMALL DATASET
 # PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small/'
 # SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small/'
 
-# IMG_HEIGHT = 500
-# IMG_WIDTH = 300
-# NUM_CHANNELS = 3
-
 # FOR 000 SMALL DATASET, 50x30
 # PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small_50by30/'
 # SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small_50by30/'
 
 # FOR 000 SMALL DATASET, 48x32
-PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small_48by32/'
-SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small_48by32/'
+# PATH_TO_PLACE_TASK_DATA_ALL = '../data/000_small_48by32/'
+# SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/000_small_48by32/'
+# ALL_TRUTH_LABELS_FILENAME = 'image_id_to_node_info_000_small.pickle'
+
+# FOR SUBSET_DATASET_5, 48x32
+PATH_TO_PLACE_TASK_DATA_ALL = '/Users/angelasy/Dropbox/cs231n/subset_data_48by32_5/'
+SAVE_TO_DATA_MAPS_FOLDER = '../data_maps/subset_48by32_5/'
+ALL_TRUTH_LABELS_FILENAME = 'image_id_to_node_info_subset_data_5.pickle'
 
 IMG_HEIGHT = 48
 IMG_WIDTH = 32
@@ -71,9 +72,9 @@ def open_labels_data(image_filename_list = [], pickle_filename = None):
   ncount = 0
   added_to_map_count = 0
   with open(file_path) as tsv:
-    for line in csv.reader(tsv, dialect="excel-tab"):
-      if ncount % 50000 == 0:
-        print 'processed {} * 50k photos'.format(ncount/50000)
+    for line in reversed(list(csv.reader(tsv, dialect="excel-tab"))):  # using reversed list since labels for folder 5 subset data images are at the end of the labels file
+      if ncount % 20000 == 0:
+        print 'processed {} * 20k photos'.format(ncount/20000)
         print 'map count: {}'.format(added_to_map_count)
       ncount += 1
       obj_id = line[0]
@@ -99,8 +100,9 @@ def open_labels_data(image_filename_list = [], pickle_filename = None):
     with open(pickle_filename, 'w') as f:
       pickle.dump(image_info_map, f)
 
-    # test pickle file
-    obj_id = '00cb928aff9719f0d57c21e371288b'
+    # test pickle file 
+    # obj_id = '00cb928aff9719f0d57c21e371288b'  # 000_small_48by32
+    obj_id = 'dc2a1cf13b396bc3c068f3b170d5a342'  # subset_data_48by32_5
     print 'obj_id = {}'.format(obj_id)
     print 'original value = {}'.format(image_info_map[obj_id])
     with open(pickle_filename, 'r') as f:
@@ -122,8 +124,6 @@ def load_images_data(image_filenames_list, np_save_filename):
   for img_index, image_filename in enumerate(image_filenames_list):
     if img_index % 100 == 0:
       print 'Processed {} *100 images.'.format(img_index/100)
-    # if img_count == 10:
-    #   break
     if image_filename == "":  # ignore error filenames
       continue
     filename = PATH_TO_PLACE_TASK_DATA_ALL + image_filename + '.png'
@@ -146,7 +146,7 @@ def load_images_data(image_filenames_list, np_save_filename):
 
   print 'Num images loaded that passed spec: {}'.format(img_count)
   all_image_data = all_image_data[:img_count]
-  print 'Final image data shape: {}'.format(all_image_data.shape)
+  print 'X.shape: {}'.format(all_image_data.shape)
 
   # Save data
   print 'INFO: Saving X as np file'
@@ -167,25 +167,24 @@ def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filena
   with open(pickled_all_info_file, 'r') as f:
     image_info_map = pickle.load(f)
     Y = np.empty((len(image_filenames_list)), dtype=np.int32)  # using type int32 because theano ivector for truth labels expects a vector of int32 values later on
-    # Y = np.empty((len(image_filenames_list)))
     country_name_class_index_map = {}
     for index, img_name in enumerate(image_filenames_list):
       country_name = image_info_map[img_name][2].split('@')[0]  # take country name from node name in index 4
       if country_name not in country_name_class_index_map:
         country_name_class_index_map[country_name] = len(country_name_class_index_map)
       class_index = country_name_class_index_map[country_name]
-      # if index <= 10:
-      #   print country_name
       Y[index] = class_index
 
     # Save data
     print 'INFO: Saving Y vector as np file'
     print np_save_filename
+    print 'Y.shape', Y.shape
     np.save(np_save_filename, Y)
     print 'Y sample: ', Y[:10]
 
     print 'INFO: Saving country name to class index map to pickle file'
     print pickle_class_map_filename
+    print 'Number of country class labels:', len(country_name_class_index_map)
     with open(pickle_class_map_filename, 'w') as f:
       pickle.dump(country_name_class_index_map, f)
 
@@ -196,13 +195,20 @@ def get_truth_labels(image_filenames_list, pickled_all_info_file, np_save_filena
 
 
 if __name__ == "__main__":
+  image_filenames = get_image_filenames(PATH_TO_PLACE_TASK_DATA_ALL)
+  print PATH_TO_PLACE_TASK_DATA_ALL
+  # print 'First 10 filenames'
+  # print image_filenames[:10]
+
+  # CLIP images if necessary 
+  # Note: Can control X and Y arrays by manipulating image_filenames list
+  # CLIP_NUM_IMAGES = 10
+  # image_filenames = image_filenames[:CLIP_NUM_IMAGES]
 
   # 0) Load labels data from mediaeval train file and saves to pickle file --> Done once and used for processing truth labels for all images in same dataset
-  # open_labels_data(image_filenames, pickle_filename = '../data_maps/image_id_to_node_info_000_small_labels.pickle')
+  open_labels_data(image_filenames, pickle_filename = SAVE_TO_DATA_MAPS_FOLDER + ALL_TRUTH_LABELS_FILENAME)
 
   # 1) Get input data X
-  image_filenames_small = get_image_filenames(PATH_TO_PLACE_TASK_DATA_ALL)
-  # print image_filenames_small[:10]
-  final_image_filenames_small = load_images_data(image_filenames_small, SAVE_TO_DATA_MAPS_FOLDER + X_INPUT_NPY_FILENAME) # Pass in npy file name to save to
+  final_image_filenames = load_images_data(image_filenames, SAVE_TO_DATA_MAPS_FOLDER + X_INPUT_NPY_FILENAME) # Pass in npy file name to save to
   # 2) Get truth labels Y
-  get_truth_labels(final_image_filenames_small, SAVE_TO_DATA_MAPS_FOLDER + ALL_TRUTH_LABELS_FILENAME_000_SMALL, SAVE_TO_DATA_MAPS_FOLDER + Y_OUTPUT_NPY_FILENAME, SAVE_TO_DATA_MAPS_FOLDER + MAP_LABELS_FILENAME)  # Pass in pickle file to load image data from and np save filename
+  get_truth_labels(final_image_filenames, SAVE_TO_DATA_MAPS_FOLDER + ALL_TRUTH_LABELS_FILENAME, SAVE_TO_DATA_MAPS_FOLDER + Y_OUTPUT_NPY_FILENAME, SAVE_TO_DATA_MAPS_FOLDER + MAP_LABELS_FILENAME)  # Pass in pickle file to load image data from and np save filename
