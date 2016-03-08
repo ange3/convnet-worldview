@@ -1,0 +1,21 @@
+1) Default CNN (2 conv and pool - fc - softmax)
+
+5 epochs on batch 0
+
+Final results:
+  test loss:      1.601922
+  test accuracy:    23.40 %
+
+
+8 epochs on batch 0
+
+Epoch 8 of 8 took 763.169s
+  training loss:    1.597363
+  training accuracy:    24.98 %
+  validation loss:    1.595075
+  validation accuracy:    26.80 %
+
+Testing...
+Final results:
+  test loss:      1.601790
+  test accuracy:    23.40 %

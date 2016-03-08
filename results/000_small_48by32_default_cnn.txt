@@ -1,5 +1,29 @@
 Default CNN: 2 Conv Layers + FC layer + Softmax
 
+# Model hyperparameters
+num_filters = 32
+filter_width = 5
+pool_width = 2
+hidden_size = 256 # size of hidden layer of neurons
+dropout_p = 0.0
+# lr_decay = 0.995
+reg_strength = 0
+# grad_clip = 10
+
+# Optimization hyperparams
+LEARNING_RATE = 1e-2
+MOMENTUM = 0.9
+theano.config.optimizer='fast_compile'
+theano.config.exception_verbosity='high'
+
+# Training parameters
+batchsize = 32
+num_epochs = 8
+record_per_iter = True
+
+
+RESULTS!
+
 Starting training...
 Epoch 1 of 8 took 48.916s
   training loss:    166075.343706
