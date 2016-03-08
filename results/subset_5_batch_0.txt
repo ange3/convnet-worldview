@@ -1,12 +1,13 @@
 1) Default CNN (2 conv and pool - fc - softmax)
 
+*************
 5 epochs on batch 0
 
 Final results:
   test loss:      1.601922
   test accuracy:    23.40 %
 
-
+*************
 8 epochs on batch 0
 
 Epoch 8 of 8 took 763.169s
@@ -19,3 +20,70 @@ Testing...
 Final results:
   test loss:      1.601790
   test accuracy:    23.40 %
+
+*************
+3 epochs on batch 0, 1, 2
+
+Epoch 3 of 3 took 2412.249s
+  training loss:    1.598507
+  training accuracy:    24.79 %
+  validation loss:    1.606583
+  validation accuracy:    23.80 %
+
+Testing...
+Final results:
+  test loss:      1.601922
+  test accuracy:    23.40 %
+
+
+
+
+2) Complex CNN
+
+# Model hyperparameters
+num_filters = 32
+filter_width = 3 # can be integer or tuple
+pool_width = 2 
+stride_width = 1 # can be integer or tuple
+padding = 'full'  # can be integer or tuple or 'full', 'same', 'valid'
+hidden_size = 256 # size of hidden layer of neurons
+dropout_p = 0.0
+# lr_decay = 0.995
+reg_strength = 0
+# grad_clip = 10
+
+# Optimization hyperparams
+LEARNING_RATE = 1e-2
+MOMENTUM = 0.9
+theano.config.optimizer='fast_compile'
+theano.config.exception_verbosity='high'
+
+# Training parameters
+batchsize = 500
+num_epochs = 3
+record_per_iter = True  # save train and val loss/accuracy after each batch runthrough
+
+
+*************
+3 epochs on batch 0
+
+Epoch 3 of 3 took 433.834s
+  training loss:    1.557009
+  training accuracy:    28.87 %
+  validation loss:    1.545581
+  validation accuracy:    31.40 %
+Training finished!
+
+
+Testing...
+Final results:
+  test loss:      1.607486
+  test accuracy:    23.30 %
+
+*************
+10 epochs on batch 0
+
+
+
+*************
+3 epochs on batch 0, 1, 2
