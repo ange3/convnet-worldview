@@ -123,6 +123,7 @@ def main_create_model(C, W, H, NUM_CLASSES, cnn_architecture="simple_cnn", num_f
   Returns:
     train function
     val function
+    l_out (final layer of network)
   '''
   # Prepare Theano variables for inputs and targets
   input_var = T.tensor4('inputs')
@@ -185,10 +186,10 @@ def main_create_model(C, W, H, NUM_CLASSES, cnn_architecture="simple_cnn", num_f
 
   print('Compiling Finished!')
 
-  return train_fn, val_fn
+  return train_fn, val_fn, l_out
 
 
-def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, val_fn, X_train, y_train, record_per_iter = True):
+def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, val_fn, X_train, y_train, X_val, y_val, record_per_iter = True):
   '''
   Trains CNN model using given train and val functions
   Args:
@@ -238,8 +239,8 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
           train_acc += iter_train_acc
           train_batches += 1
           
-          # Run validation on entire data set after each iteration, not iterating over mini batches          
-          val_err, val_acc = val_fn(inputs, targets)
+          # Run validation on entire val data set after each iteration, not iterating over mini batches
+          val_err, val_acc = val_fn(X_val, y_val)
           
           if record_per_iter:
               train_err_list.append(iter_train_err)
