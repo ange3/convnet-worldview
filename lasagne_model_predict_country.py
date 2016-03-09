@@ -3,6 +3,7 @@ import numpy as np
 import theano
 import theano.tensor as T
 import time
+import data_utils
 
 def simple_cnn(C, W, H, num_classes, num_filters=32, filter_width=5, pool_width=2, stride=1, pad='valid', hidden_size=256, dropout=0.0, inputVar = None):
   '''
@@ -94,9 +95,9 @@ def complex_cnn(C, W, H, num_classes, num_filters=32, filter_width=5, pool_width
 # Using example from https://github.com/Lasagne/Lasagne/blob/master/examples/mnist.py
 ###
 
-def build_cnn(C, W, H, num_classes, num_filters=32, filter_width=5, pool_width=2, stride=1, pad=0, hidden_size=256, dropout=0.0, inputVar = None, cnn_architecture="simple_cnn"):
+def _build_cnn(C, W, H, num_classes, num_filters=32, filter_width=5, pool_width=2, stride=1, pad=0, hidden_size=256, dropout=0.0, inputVar = None, cnn_architecture="simple_cnn"):
   '''
-  Builds and returns CNN model
+  Wrapper that builds and returns CNN model with specified architecture.
 
   Args:
     num_classes: number of classes being predicted (Used as num_units in final output layer)
@@ -111,4 +112,164 @@ def build_cnn(C, W, H, num_classes, num_filters=32, filter_width=5, pool_width=2
 
   return l_in, l_out
 
-  
+
+def main_create_model(C, W, H, NUM_CLASSES, cnn_architecture="simple_cnn", num_filters=32, filter_width=5, pool_width=2, stride=1, pad=0, hidden_size=256, dropout=0.0, use_optimizer = "nesterov_momentum", learning_rate=1e-2, momentum=0.9, beta1=0.9, beta2=0.999, epsilon=1e-08):
+  '''
+  Builds the CNN model:
+    (1) Builds the network
+    (2) Calculates loss and accuracy expression
+    (3) Compiles train function (assigning appropriate update) and val function
+
+  Returns:
+    train function
+    val function
+  '''
+  # Prepare Theano variables for inputs and targets
+  input_var = T.tensor4('inputs')
+  target_var = T.ivector('targets')
+
+  print('Building network...')
+
+  # Create neural network model
+  l_in, l_out = _build_cnn(C, W, H, NUM_CLASSES, cnn_architecture=cnn_architecture, num_filters=num_filters, filter_width=filter_width, pool_width=pool_width, stride=stride, pad=pad, hidden_size=hidden_size, dropout=dropout, inputVar = input_var)
+
+  print('Compiling functions...')
+
+  # Create a loss expression for training, i.e., a scalar objective we want
+  # to minimize (for our multi-class problem, it is the cross-entropy loss):
+  prediction = lasagne.layers.get_output(l_out)
+  loss = T.nnet.categorical_crossentropy(prediction, target_var)
+  # loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
+  loss = loss.mean()
+  acc = T.mean(T.eq(T.argmax(prediction, axis=1), target_var),
+                    dtype=theano.config.floatX)
+
+  # Return predictions in a function
+  pred_fn = theano.function([l_in.input_var], prediction)
+
+  # Create update expressions for training, i.e., how to modify the
+  # parameters at each training step. Here, we'll use Stochastic Gradient
+  # Descent (SGD) with Nesterov momentum, but Lasagne offers plenty more.
+  params = lasagne.layers.get_all_params(l_out, trainable=True)
+  if use_optimizer == "nesterov_momentum":
+      updates = lasagne.updates.nesterov_momentum(
+          loss, params, learning_rate=learning_rate, momentum=momentum)
+  elif use_optimizer == "adam":
+      updates = lasagne.updates.adam(
+          loss, params, learning_rate=learning_rate, beta1=beta1, beta2=beta2, epsilon=epsilon)
+  else:   # default is nesterov momentum
+      updates = lasagne.updates.nesterov_momentum(
+          loss, params, learning_rate=learning_rate, momentum=momentum)
+
+  print 'Using Update:', use_optimizer
+      
+  # Create a loss expression for validation/testing. The crucial difference
+  # here is that we do a deterministic forward pass through the network,
+  # disabling dropout layers.
+  test_prediction = lasagne.layers.get_output(l_out, deterministic=True)
+  # test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, target_var)
+  test_loss = T.nnet.categorical_crossentropy(test_prediction, target_var)
+
+  test_loss = test_loss.mean()
+  # As a bonus, also create an expression for the classification accuracy:
+  test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
+                    dtype=theano.config.floatX)
+
+   # Compile a function performing a training step on a mini-batch (by giving
+  # the updates dictionary) and returning the corresponding training loss:
+  train_fn = theano.function([input_var, target_var], [loss, acc], updates=updates)
+  # train_fn = theano.function([input_var, target_var], loss, updates=updates)
+
+  # Compile a second function computing the validation loss and accuracy:
+  val_fn = theano.function([input_var, target_var], [test_loss, test_acc])
+
+  print('Compiling Finished!')
+
+  return train_fn, val_fn
+
+
+def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, val_fn, X_train, y_train, record_per_iter = True):
+  '''
+  Trains CNN model using given train and val functions
+  Args:
+    Training Params:  num_epochs, batchsize, num_train
+    Functions:        train_fn, val_fn
+    Data:             X_train, y_train
+
+  Returns: Lists of loss (error) and accuracy values by iteration and by epoch
+  '''
+  print ( 'Training on: {} epochs of batch size {} with num training samples {}'.format(num_epochs,batchsize,num_train) )
+  print ('Using optimizer: {}'.format(use_optimizer))
+  print ("Validation Size: {}".format(num_val) )
+  print("Starting training...")
+
+  # Data structures to store error and accuracy values
+  train_err_list = []
+  val_err_list = []
+  train_acc_list = []
+  val_acc_list = []
+
+  epochs_train_err_list = []
+  epochs_train_acc_list = []
+  epochs_val_err_list = []
+  epochs_val_acc_list = []
+
+  # We iterate over epochs:
+  for epoch in range(num_epochs):
+      # 1) In each epoch, we do a full pass over the training data:
+      train_err = 0
+      train_acc = 0
+      train_batches = 0
+      start_time = time.time()
+      
+      # Each batch is 1 iteration
+      num_iters = 0
+      for batch in data_utils.iterate_minibatches(X_train, y_train, batchsize, shuffle=True):
+          # For testing, limit num iterations
+          # if num_iters >= 2:
+              # break
+          inputs, targets = batch
+          iter_train_err, iter_train_acc = train_fn(inputs, targets)
+
+          # Can use this function to take out slice prediction at last step
+          # prediction = pred_fn(inputs)  
+
+          train_err += iter_train_err
+          train_acc += iter_train_acc
+          train_batches += 1
+          
+          # Run validation on entire data set after each iteration, not iterating over mini batches          
+          val_err, val_acc = val_fn(inputs, targets)
+          
+          if record_per_iter:
+              train_err_list.append(iter_train_err)
+              train_acc_list.append(iter_train_acc)
+              val_err_list.append(val_err)
+              val_acc_list.append(val_acc)
+          
+          print("Ep {} \titer {}  \tloss {:.5f}, train acc {:.2f}, val acc {:.2f}".format(epoch, num_iters, float(iter_train_err), iter_train_acc * 100, val_acc *100 ))
+          num_iters += 1
+
+      # Then we print the results for this epoch:
+      
+      epoch_train_err = train_err / train_batches
+      epoch_train_acc = train_acc / train_batches * 100
+      epoch_val_err = val_err / 1
+      epoch_val_acc = val_acc / 1 * 100
+      
+      print("Epoch {} of {} took {:.3f}s".format(
+          epoch + 1, num_epochs, time.time() - start_time))
+      print("  training loss:\t\t{:.6f}".format(epoch_train_err))
+      print("  training accuracy:\t\t{:.2f} %".format(epoch_train_acc))
+      print("  validation loss:\t\t{:.6f}".format(epoch_val_err))
+      print("  validation accuracy:\t\t{:.2f} %".format(epoch_val_acc))
+      
+      # Record loss and accuracy per epoch as well
+      epochs_train_err_list.append(epoch_train_err)
+      epochs_train_acc_list.append(epoch_train_acc)
+      epochs_val_err_list.append(epoch_val_err)
+      epochs_val_acc_list.append(epoch_val_acc)
+
+  print('Training finished!')
+
+  return train_err_list, train_acc_list, val_err_list, val_acc_list, epochs_train_err_list, epochs_train_acc_list, epochs_val_err_list, epochs_val_acc_list

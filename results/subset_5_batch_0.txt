@@ -1,4 +1,4 @@
-1) Default CNN (2 conv and pool - fc - softmax)
+EXPERIMENT 1) Default CNN (2 conv and pool - fc - softmax)
 
 *************
 5 epochs on batch 0
@@ -38,7 +38,7 @@ Final results:
 
 
 
-2) Complex CNN
+EXPERIMENT 2) Complex CNN (Nesterov Momentum)
 
 # Model hyperparameters
 num_filters = 32
@@ -82,8 +82,141 @@ Final results:
 
 *************
 10 epochs on batch 0
+(1) LR = 1e-2
 
+Training on: 10 epochs of batch size 500 with num training samples 24000
+Using optimizer: nesterov_momentum
+Validation Size: 3000
+Epoch 10 of 10 took 447.313s
+  training loss:    1.359982
+  training accuracy:    44.37 %
+  validation loss:    1.243208
+  validation accuracy:    55.60 %
+Training finished!
+
+Testing...
+Final results:
+  test loss:      1.701710
+  test accuracy:    21.33 %
+
+
+(2) LR = 0.045
+
+a) Training on: 10 epochs of batch size 500 with num training samples 24000
+Using optimizer: nesterov_momentum
+Validation Size: 3000
+
+Epoch 10 of 10 took 472.821s
+  training loss:    1.351675
+  training accuracy:    46.01 %
+  validation loss:    1.080835
+  validation accuracy:    60.60 %
+Training finished!
+
+Testing...
+Final results:
+  test loss:      1.889099
+  test accuracy:    22.60 %
+
+
+b) 20 epochs
+
+Training on: 20 epochs of batch size 500 with num training samples 24000
+Using optimizer: nesterov_momentum
+Validation Size: 3000
+
+Epoch 20 of 20 took 280.309s
+  training loss:    0.047048
+  training accuracy:    98.70 %
+  validation loss:    0.020234
+  validation accuracy:    99.60 %
+Training finished!
+
+
+Testing...
+Final results:
+  test loss:      5.780813
+  test accuracy:    22.23 %
 
 
 *************
-3 epochs on batch 0, 1, 2
+LR = 0.045 on multiple batches
+a) 3 epochs on batch 0, 1, 2
+
+Training on: 3 epochs of batch size 500 with num training samples 72000
+Using optimizer: nesterov_momentum
+Validation Size: 9000
+Epoch 3 of 3 took 1543.071s
+  training loss:    1.578904
+  training accuracy:    26.73 %
+  validation loss:    1.546296
+  validation accuracy:    30.80 %
+Training finished!
+
+Test Size: 9000
+Testing...
+Final results:
+  test loss:      1.595923
+  test accuracy:    24.74 %
+
+b) 10 epochs on batch 0, 1, 2
+
+Training on: 10 epochs of batch size 1000 with num training samples 72000
+Using optimizer: nesterov_momentum
+Validation Size: 9000
+
+
+RUNNING!!!
+
+
+EXPERIMENT 3) Complex CNN (Adam Update)
+
+*************
+10 epochs on batch 0
+LR = 0.045
+
+Training on: 10 epochs of batch size 500 with num training samples 24000
+Using optimizer: adam
+Validation Size: 3000
+
+Epoch 10 of 10 took 473.466s
+  training loss:    1.597967
+  training accuracy:    24.98 %
+  validation loss:    1.607172
+  validation accuracy:    24.40 %
+Training finished!
+
+Testing...
+Final results:
+  test loss:      1.602842
+  test accuracy:    23.40 %
+
+
+*************
+20 epochs on batch 0
+
+Training on: 20 epochs of batch size 500 with num training samples 24000
+Using optimizer: adam
+Validation Size: 3000
+
+Epoch 20 of 20 took 368.218s
+  training loss:    1.598131
+  training accuracy:    24.98 %
+  validation loss:    1.599807
+  validation accuracy:    25.00 %
+Training finished!
+
+Testing...
+Final results:
+  test loss:      1.601944
+  test accuracy:    23.40 %
+
+
+*************
+10 epochs on batch 0, 1, 2
+
+RUNNING!!!
+
+
+EXPERIMENT 4) Add Batch Norm?
+
