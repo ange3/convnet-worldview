@@ -134,6 +134,7 @@ def load_images_data(image_filenames_list, base_save_filename, batchsize = -1):
     filenames_list_added_to_X_per_batch = {}
   else:
     filenames_list_added_to_X = []
+  map_row_filename = {}
 
   # Set up variables
   img_count = 0
@@ -142,6 +143,8 @@ def load_images_data(image_filenames_list, base_save_filename, batchsize = -1):
 
   # Loop through all images and add them to X
   for img_index, image_filename in enumerate(image_filenames_list):
+    # if batch_count >= 1:
+    #   break
     if batchsize != -1 and img_count == batchsize:
       # Save data
       print '-- SAVE: X as np file - Batch', batch_count
@@ -153,6 +156,13 @@ def load_images_data(image_filenames_list, base_save_filename, batchsize = -1):
       arr = np.load(np_save_filename)
       print '-- Testing: Loading np file'
       print 'Loaded array with shape {}'.format(arr.shape)
+
+      # Save map_row_filename
+      map_name_file = SAVE_TO_DATA_MAPS_FOLDER + 'map_row_imagename_' + str(batch_count) + '.pickle'
+      pickle.dump(map_row_filename, open (map_name_file, 'wb'))
+      print '-- SAVE: MAP ROW TO IMAGE NAME'
+      print map_name_file
+
 
       # Update for next loop
       img_count = 0
@@ -179,6 +189,13 @@ def load_images_data(image_filenames_list, base_save_filename, batchsize = -1):
 
       # Insert image data in X array
       all_image_data[img_count] = image_array
+      map_row_filename[img_count] = image_filename
+      if image_filename == 'e213a5a891682a3e7f4f1e77d0f31c97':
+        print '** e213a5a891682a3e7f4f1e77d0f31c97 **'
+        print 'row in X matrix: ', img_count
+        # row_check = img_count
+
+      # Update counts
       img_count += 1
       total_img_count += 1
 
@@ -199,8 +216,10 @@ def load_images_data(image_filenames_list, base_save_filename, batchsize = -1):
   print '-- SAVE: Saving X as np file'
   if batchsize != -1:
     np_save_filename = base_save_filename + '_' + str(batch_count) + '.npy'
+    map_name_file = SAVE_TO_DATA_MAPS_FOLDER + 'map_row_imagename_' + str(batch_count) + '.pickle'
   else:
     np_save_filename = base_save_filename + '.npy'
+    map_name_file = SAVE_TO_DATA_MAPS_FOLDER + 'map_row_imagename.pickle'
   print np_save_filename
   np.save(np_save_filename, all_image_data)
 
@@ -208,6 +227,11 @@ def load_images_data(image_filenames_list, base_save_filename, batchsize = -1):
   arr = np.load(np_save_filename)
   print 'INFO: Loading np file'
   print 'Loaded array with shape {}'.format(arr.shape)
+
+  # Saving map of row number to image filename
+  pickle.dump(map_row_filename, open (map_name_file, 'wb'))
+  print '-- SAVE: MAP ROW TO IMAGE NAME'
+  print map_name_file
 
   # Return list of filenames or map of lists (if using batches)
   if batchsize != -1:
@@ -227,6 +251,14 @@ def extract_y_from_filenames_and_save(image_filenames_list, image_info_map, coun
       country_name_class_index_map[country_name] = len(country_name_class_index_map)
     class_index = country_name_class_index_map[country_name]
     Y[index] = class_index
+    
+    if img_name == "e213a5a891682a3e7f4f1e77d0f31c97":
+      print '** e213a5a891682a3e7f4f1e77d0f31c97 LABEL **'
+      print country_name
+      print 'index in Y:', index
+      print 'class lable:', class_index
+      map_class_country = {v:k for k,v in country_name_class_index_map.items()}
+      print 'country:', map_class_country[class_index]
 
   # Save data
   print '-- SAVE: Saving Y vector as np file'

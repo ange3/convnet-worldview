@@ -1,0 +1,7 @@
+Ep 0 	iter 0  	loss 1.62056, train acc 23.40, val acc 24.80
+Ep 0 	iter 1  	loss 1.61227, train acc 23.60, val acc 25.20
+Epoch 1 of 20 took 62.402s
+  training loss:		1.616414
+  training accuracy:		23.50 %
+  validation loss:		1.601183
+  validation accuracy:		25.20 %

@@ -142,7 +142,7 @@ def main_create_model(C, W, H, NUM_CLASSES, cnn_architecture="simple_cnn", num_f
   loss = T.nnet.categorical_crossentropy(prediction, target_var)
   # loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
   loss = loss.mean()
-  acc = T.mean(T.eq(T.argmax(prediction, axis=1), target_var),
+  acc = T.mean(T.eq(T.argmax(prediction, axis=1), target_var),  # prediction (class with max prob) --> if equivalent to answer --> mean of all samples (to get accuracy)
                     dtype=theano.config.floatX)
 
   # Return predictions in a function
@@ -186,10 +186,10 @@ def main_create_model(C, W, H, NUM_CLASSES, cnn_architecture="simple_cnn", num_f
 
   print('Compiling Finished!')
 
-  return train_fn, val_fn, l_out
+  return train_fn, val_fn, pred_fn, l_out
 
 
-def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, val_fn, X_train, y_train, X_val, y_val, record_per_iter = True):
+def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, val_fn, X_train, y_train, X_val, y_val, record_per_iter = True, save_results_to_file=None):
   '''
   Trains CNN model using given train and val functions
   Args:
@@ -198,6 +198,8 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
     Data:             X_train, y_train
 
   Returns: Lists of loss (error) and accuracy values by iteration and by epoch
+
+  Can save epoch results to file.
   '''
   print ( 'Training on: {} epochs of batch size {} with num training samples {}'.format(num_epochs,batchsize,num_train) )
   print ('Using optimizer: {}'.format(use_optimizer))
@@ -215,8 +217,13 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
   epochs_val_err_list = []
   epochs_val_acc_list = []
 
+  if save_results_to_file:
+    results_text_all = []
+
   # We iterate over epochs:
   for epoch in range(num_epochs):
+      if epoch == 1:
+        break
       # 1) In each epoch, we do a full pass over the training data:
       train_err = 0
       train_acc = 0
@@ -227,8 +234,8 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
       num_iters = 0
       for batch in data_utils.iterate_minibatches(X_train, y_train, batchsize, shuffle=True):
           # For testing, limit num iterations
-          # if num_iters >= 2:
-              # break
+          if num_iters >= 2:
+              break
           inputs, targets = batch
           iter_train_err, iter_train_acc = train_fn(inputs, targets)
 
@@ -248,7 +255,10 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
               val_err_list.append(val_err)
               val_acc_list.append(val_acc)
           
-          print("Ep {} \titer {}  \tloss {:.5f}, train acc {:.2f}, val acc {:.2f}".format(epoch, num_iters, float(iter_train_err), iter_train_acc * 100, val_acc *100 ))
+          iter_results = "Ep {} \titer {}  \tloss {:.5f}, train acc {:.2f}, val acc {:.2f}".format(epoch, num_iters, float(iter_train_err), iter_train_acc * 100, val_acc *100)
+          print iter_results
+          if save_results_to_file:
+            results_text_all.append(iter_results)
           num_iters += 1
 
       # Then we print the results for this epoch:
@@ -258,12 +268,15 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
       epoch_val_err = val_err / 1
       epoch_val_acc = val_acc / 1 * 100
       
-      print("Epoch {} of {} took {:.3f}s".format(
-          epoch + 1, num_epochs, time.time() - start_time))
-      print("  training loss:\t\t{:.6f}".format(epoch_train_err))
-      print("  training accuracy:\t\t{:.2f} %".format(epoch_train_acc))
-      print("  validation loss:\t\t{:.6f}".format(epoch_val_err))
-      print("  validation accuracy:\t\t{:.2f} %".format(epoch_val_acc))
+      epoch_results = "Epoch {} of {} took {:.3f}s\n".format(epoch + 1, num_epochs, time.time() - start_time)
+      epoch_results += "  training loss:\t\t{:.6f}\n".format(epoch_train_err)
+      epoch_results += "  training accuracy:\t\t{:.2f} %\n".format(epoch_train_acc)
+      epoch_results += "  validation loss:\t\t{:.6f}\n".format(epoch_val_err)
+      epoch_results += "  validation accuracy:\t\t{:.2f} %".format(epoch_val_acc)
+      print epoch_results
+
+      if save_results_to_file:
+        results_text_all.append(epoch_results)
       
       # Record loss and accuracy per epoch as well
       epochs_train_err_list.append(epoch_train_err)
@@ -272,5 +285,14 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
       epochs_val_acc_list.append(epoch_val_acc)
 
   print('Training finished!')
+
+  # Save training results to file
+  if save_results_to_file:
+    print ('Saving training results to file...')
+    f = open (save_results_to_file, 'wb')
+    for text in results_text_all:
+      f.write(text)
+      f.write("\n")
+    print ('Saving results to file finished!')
 
   return train_err_list, train_acc_list, val_err_list, val_acc_list, epochs_train_err_list, epochs_train_acc_list, epochs_val_err_list, epochs_val_acc_list
