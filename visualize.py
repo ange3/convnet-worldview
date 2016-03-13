@@ -15,6 +15,25 @@ def smoothen_data(data, smooth_window=100):
         smooth.append(np.mean(data[i:len(data)]))
     return smooth
 
+def plot_loss(data_set, loss_1, loss_2, lr, ep, xlabel='epochs', legend_1='losses', legend_2='losses'):              
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    losses_line_1, = ax1.plot(xrange(len(loss_1)), loss_1, 'r-', label=legend_1)
+    losses_line_2, = ax1.plot(xrange(len(loss_2)), loss_2, 'b-', label=legend_2)
+
+    ax1.set_ylabel('loss', color='r')
+    ax1.set_xlabel(xlabel)
+    for tl in ax1.get_yticklabels():
+        tl.set_color('r')
+
+    plt.legend(handles=[losses_line_1, losses_line_2],bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand")
+
+    plt.show()
+
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    figure_filename = "loss_plots/{}_lr{}_ep{}_{}.png".format(data_set, lr, ep, timestr)
+    fig.savefig(figure_filename)
+
 def plot_loss_acc(data_set, losses, train_accs, val_accs, lr, rg, ep, num_train,  xlabel='epochs'):              
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
