@@ -222,8 +222,6 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
 
   # We iterate over epochs:
   for epoch in range(num_epochs):
-      if epoch == 1:
-        break
       # 1) In each epoch, we do a full pass over the training data:
       train_err = 0
       train_acc = 0
@@ -234,8 +232,8 @@ def train(num_epochs, batchsize, num_train, num_val, use_optimizer, train_fn, va
       num_iters = 0
       for batch in data_utils.iterate_minibatches(X_train, y_train, batchsize, shuffle=True):
           # For testing, limit num iterations
-          if num_iters >= 2:
-              break
+          # if num_iters >= 2:
+          #     break
           inputs, targets = batch
           iter_train_err, iter_train_acc = train_fn(inputs, targets)
 
